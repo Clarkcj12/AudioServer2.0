@@ -1,0 +1,5 @@
+rootProject.name = "AudioServerPlugin"
+
+include ':common'
+include ':paper'
+include ':velocity'

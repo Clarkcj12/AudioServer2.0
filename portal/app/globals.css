@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* AudioServer Pro Portal — always-dark admin theme */
+:root {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --border: #27272a;
+  --muted: #71717a;
+  --accent: #7dd3fc;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}

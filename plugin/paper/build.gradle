@@ -1,0 +1,29 @@
+plugins {
+    id 'com.gradleup.shadow' version '8.3.6'
+}
+
+dependencies {
+    // Shared model / Redis layer
+    implementation project(':common')
+
+    // Paper API
+    compileOnly 'io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT'
+
+    // WorldGuard (soft-depend — optional integration).
+    // transitive = false: WG's own deps (WorldEdit, etc.) are provided by the server at runtime;
+    // we only need the WG JAR itself on the compile classpath.
+    compileOnly('com.sk89q.worldguard:worldguard-bukkit:7.0.17') { transitive = false }
+
+    // Incendo Cloud v2 — Paper integration
+    implementation 'org.incendo:cloud-paper:2.0.0-beta.10'
+    implementation 'org.incendo:cloud-core:2.0.0-beta.10'
+}
+
+shadowJar {
+    archiveClassifier = ''
+    relocate 'org.incendo.cloud', 'dev.audioserver.libs.cloud'
+    relocate 'redis.clients.jedis', 'dev.audioserver.libs.jedis'
+    relocate 'org.apache.commons.pool2', 'dev.audioserver.libs.pool2'
+}
+
+build.dependsOn shadowJar

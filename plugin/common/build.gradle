@@ -1,0 +1,6 @@
+// Shared code compiled against no platform API.
+// Both :paper and :velocity depend on this module.
+dependencies {
+    // Jedis (shared Redis client)
+    implementation 'redis.clients:jedis:5.2.0'
+}

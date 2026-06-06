@@ -1,0 +1,22 @@
+name: AudioServer
+version: '1.0.0-SNAPSHOT'
+main: dev.audioserver.AudioServerPlugin
+description: Spatial audio and voice chat plugin powered by AudioServer 2.0
+api-version: '1.21'
+author: AudioServer Contributors
+soft-depend:
+  - WorldGuard
+
+commands:
+  audio:
+    description: Open the audio client
+    usage: /audio
+    permission: audioserver.use
+
+permissions:
+  audioserver.use:
+    description: Allows a player to open the audio client
+    default: true
+  audioserver.admin:
+    description: Access to AudioServer admin commands
+    default: op

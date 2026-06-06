@@ -1,0 +1,27 @@
+plugins {
+    id 'com.gradleup.shadow' version '8.3.6'
+    // Velocity's annotation processor generates velocity-plugin.json from @Plugin
+    id 'net.kyori.indra' version '3.1.3' apply false
+}
+
+dependencies {
+    // Shared model / Redis layer
+    implementation project(':common')
+
+    // Velocity API (3.4 — update to match your proxy version)
+    compileOnly 'com.velocitypowered:velocity-api:3.4.0-SNAPSHOT'
+    annotationProcessor 'com.velocitypowered:velocity-api:3.4.0-SNAPSHOT'
+
+    // Incendo Cloud v2 — Velocity integration
+    implementation 'org.incendo:cloud-velocity:2.0.0-beta.10'
+    implementation 'org.incendo:cloud-core:2.0.0-beta.10'
+}
+
+shadowJar {
+    archiveClassifier = ''
+    relocate 'org.incendo.cloud', 'dev.audioserver.libs.cloud'
+    relocate 'redis.clients.jedis', 'dev.audioserver.libs.jedis'
+    relocate 'org.apache.commons.pool2', 'dev.audioserver.libs.pool2'
+}
+
+build.dependsOn shadowJar

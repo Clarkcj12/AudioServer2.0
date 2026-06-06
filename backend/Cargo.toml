@@ -1,0 +1,51 @@
+[package]
+name = "audio-server"
+version = "0.1.0"
+edition = "2021"
+description = "Stateless WebSocket relay node for AudioServer 2.0"
+
+[dependencies]
+# Web framework & async runtime
+axum            = { version = "0.8", features = ["ws", "macros"] }
+tokio           = { version = "1", features = ["full"] }
+tower           = "0.5"
+tower-http      = { version = "0.6", features = ["fs", "cors"] }
+
+# Redis (async connection pool + Pub/Sub)
+# Do NOT add an explicit `redis` dep — deadpool-redis re-exports its own pinned
+# version via deadpool_redis::redis.  Adding a separate redis dep causes a
+# duplicate trait (ConnectionLike) compile error.
+deadpool-redis  = "0.19"
+# StreamExt::next() for the Pub/Sub message stream inside ws_session.
+futures-util    = "0.3"
+
+# PostgreSQL (optional — relay starts cleanly if DATABASE_URL is unset)
+# Uses runtime query API (not macros) so cargo check passes without a live DB.
+sqlx            = { version = "0.8", default-features = false, features = [
+                    "runtime-tokio", "tls-rustls", "postgres", "chrono", "uuid",
+                    "macros",   # enables #[derive(sqlx::FromRow)]
+                    "migrate"   # enables sqlx::migrate!() for automatic migration on startup
+                ] }
+chrono          = { version = "0.4", features = ["serde"] }
+
+# JWT signing / verification (HS256)
+jsonwebtoken    = "9"
+
+# Serialisation
+serde           = { version = "1", features = ["derive"] }
+serde_json      = "1"
+
+# UUID parsing
+uuid            = { version = "1", features = ["v4", "serde"] }
+
+# Observability
+tracing               = "0.1"
+tracing-subscriber    = { version = "0.3", features = ["env-filter"] }
+
+# Password hashing — Argon2id for admin_users credentials
+# `std` feature enables hashing (not just verification) and rand_core::OsRng
+argon2          = { version = "0.5", features = ["std"] }
+
+# Config / error helpers
+dotenvy         = "0.15"
+thiserror       = "2"

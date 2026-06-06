@@ -1,0 +1,7 @@
+# AudioServer 2.0 — Paper plugin configuration
+domain: "https://audio.example.com"
+
+redis:
+  host: "127.0.0.1"
+  port: 6379
+  # password: "your-redis-password"
