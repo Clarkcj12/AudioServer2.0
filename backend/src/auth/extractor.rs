@@ -103,6 +103,11 @@ mod tests {
             database_url: None,
             bootstrap_username: None,
             bootstrap_password: None,
+            s3_endpoint: None,
+            s3_bucket: None,
+            s3_region: None,
+            s3_access_key: None,
+            s3_secret_key: None,
         })
     }
 
