@@ -96,13 +96,28 @@ The plugin registers three custom flags that can be set on any existing WG regio
 | `audio-volume` | `Integer` | Volume percentage `0–100`. Default: `100`. |
 | `audio-loop` | `State` | `allow` = loop continuously. `deny` / absent = play once. |
 
-**Example (WorldGuard CLI):**
+**Using the Media Library (recommended):**
+
+Files uploaded via the admin portal Media Library are stored in S3/MinIO. Use the relay's
+stable permalink as the `audio-src` value — it 302-redirects to a fresh presigned URL on
+every request, so it never expires:
 
 ```
-/rg flag spawn audio-src https://cdn.example.com/ambient/spawn.ogg
+/rg flag spawn audio-src https://relay.example.com/media/<media-id>
 /rg flag spawn audio-volume 75
 /rg flag spawn audio-loop allow
 ```
+
+Copy the permalink directly from the portal's Media Library page (**Copy region URL** button).
+
+**External/static URLs also work:**
+
+```
+/rg flag spawn audio-src https://cdn.example.com/ambient/spawn.ogg
+```
+
+> **Note:** Presigned S3 URLs expire (default 1 h). Use the relay permalink for WG flags,
+> not the raw presigned URL shown in the media library file list.
 
 **How it works:**
 

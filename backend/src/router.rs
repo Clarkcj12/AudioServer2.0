@@ -1,11 +1,11 @@
-use axum::{routing::{get, post, put}, Router};
+use axum::{routing::{delete, get, post, put}, Router};
 use tower_http::{
     cors::{Any, CorsLayer},
     services::ServeDir,
 };
 
 use crate::{
-    api::{admin_ticket, auth, player, sessions, settings, stats},
+    api::{admin_ticket, auth, media, player, sessions, settings, stats},
     ws::{admin::admin_ws_handler, handler::ws_handler},
     AppState,
 };
@@ -34,6 +34,18 @@ pub fn build(state: AppState) -> Router {
         .route("/api/settings/{uuid}",    get(settings::get_settings))
         .route("/api/settings/{uuid}",    put(settings::put_settings))
         .route("/api/admin/ticket",       post(admin_ticket::issue_ticket))
+
+        // ── Media library (admin JWT) ────────────────────────────────────────
+        // Static paths are matched before the :id parameter by axum's router.
+        .route("/api/admin/media",             get(media::list_media))
+        .route("/api/admin/media/upload-url",  post(media::request_upload_url))
+        .route("/api/admin/media/confirm",     post(media::confirm_upload))
+        .route("/api/admin/media/{id}",        delete(media::delete_media))
+
+        // ── Public media permalink (no auth — presigned URL is the auth) ────
+        // Resolves a media ID to a fresh presigned S3/MinIO GET URL (302 redirect).
+        // Set this URL as the WorldGuard audio-src flag value for a region.
+        .route("/media/{id}",  get(media::media_permalink))
 
         // ── Admin WebSocket (ticket auth, streams audio:events) ─────────────
         .route("/ws/admin",    get(admin_ws_handler))

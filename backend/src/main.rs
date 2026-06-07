@@ -13,10 +13,12 @@ mod config;
 mod db;
 mod redis_pool;
 mod router;
+mod storage;
 mod ws;
 
 pub use config::Config;
 pub use redis_pool::RedisPool;
+pub use storage::StorageClient;
 
 /// Shared application state injected into every Axum handler via [`axum::extract::State`].
 #[derive(Clone)]
@@ -28,6 +30,8 @@ pub struct AppState {
     pub redis_client: deadpool_redis::redis::Client,
     /// PostgreSQL pool for user settings. `None` when `DATABASE_URL` is unset.
     pub db: Option<sqlx::PgPool>,
+    /// S3/MinIO client for audio media library. `None` when S3_* vars are unset.
+    pub storage: Option<StorageClient>,
     pub config: Arc<Config>,
 }
 
@@ -64,7 +68,14 @@ async fn main() {
         api::auth::seed_bootstrap_admin(pool, username, password).await;
     }
 
-    let state = AppState { redis, redis_client, db, config: config.clone() };
+    let storage = StorageClient::from_config(&config);
+    if storage.is_none() && config.s3_endpoint.is_some() {
+        tracing::warn!("S3_ENDPOINT is set but storage client failed to initialise — media endpoints will return 503");
+    } else if storage.is_none() {
+        tracing::info!("S3 not configured — media library endpoints disabled (set S3_ENDPOINT/BUCKET/REGION/ACCESS_KEY/SECRET_KEY to enable)");
+    }
+
+    let state = AppState { redis, redis_client, db, storage, config: config.clone() };
     let app = router::build(state);
 
     let listener = TcpListener::bind(&config.bind_addr)

@@ -28,6 +28,14 @@ pub struct Config {
     /// Remove both vars from env after first boot.
     pub bootstrap_username: Option<String>,
     pub bootstrap_password: Option<String>,
+    /// S3/MinIO — all five must be set for the media library to be active.
+    /// S3_ENDPOINT must be publicly reachable from the browser (presigned PUT/GET
+    /// URLs are handed directly to clients, not proxied through the relay).
+    pub s3_endpoint: Option<String>,
+    pub s3_bucket: Option<String>,
+    pub s3_region: Option<String>,
+    pub s3_access_key: Option<String>,
+    pub s3_secret_key: Option<String>,
 }
 
 impl Config {
@@ -41,6 +49,11 @@ impl Config {
             database_url: env::var("DATABASE_URL").ok(),
             bootstrap_username: env::var("BOOTSTRAP_USERNAME").ok(),
             bootstrap_password: env::var("BOOTSTRAP_PASSWORD").ok(),
+            s3_endpoint:   env::var("S3_ENDPOINT").ok(),
+            s3_bucket:     env::var("S3_BUCKET").ok(),
+            s3_region:     env::var("S3_REGION").ok(),
+            s3_access_key: env::var("S3_ACCESS_KEY").ok(),
+            s3_secret_key: env::var("S3_SECRET_KEY").ok(),
         })
     }
 }

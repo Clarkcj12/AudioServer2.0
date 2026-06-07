@@ -46,6 +46,13 @@ tracing-subscriber    = { version = "0.3", features = ["env-filter"] }
 # `std` feature enables hashing (not just verification) and rand_core::OsRng
 argon2          = { version = "0.5", features = ["std"] }
 
+# S3 / MinIO — presigned URL generation (no HTTP client overhead for signing)
+rusty-s3        = "0.3"
+# HTTP client for relay-side S3 DELETE calls
+reqwest         = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+# URL parsing for S3 endpoint config
+url             = "2"
+
 # Config / error helpers
 dotenvy         = "0.15"
 thiserror       = "2"

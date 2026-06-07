@@ -12,11 +12,13 @@ JSON payload contracts live in [`docs/events.md`](./docs/events.md).
 
 ---
 
-## Current Status — Phase 3a Complete
+## Current Status — Phase 5 Complete
 
-The full audio delivery loop is implemented. Server admins have a live event
-stream showing all in-game audio activity in real time, with history replay on
-connect.
+The media-to-playback loop is closed. Admins upload audio to S3/MinIO via the
+Media Library, copy a stable relay permalink (`/media/:id`), and set it as the
+WorldGuard `audio-src` flag. The relay 302-redirects every request to a fresh
+presigned URL so the URL never expires. Phase 4 added the media library;
+Phase 3b completed the full auth stack, player portal, and live event stream.
 
 | Component | Status | Notes |
 |-----------|--------|-------|
@@ -63,6 +65,16 @@ connect.
 | Portal — `/auth/player-login` | ✅ Done | Instructions page for unauthenticated player routes |
 | Portal — `/auth/error` | ✅ Done | Reason-mapped error page for failed OTT login |
 | Portal — proxy player routes | ✅ Done | `as_player_token` cookie guards `/preferences` |
+| Relay — `migrations/004_audio_media.sql` | ✅ Done | id TEXT, object_key, filename, content_type, size_bytes, duration_seconds, uploaded_by, created_at |
+| Relay — `POST /api/admin/media/upload-url` | ✅ Done | Issues presigned S3 PUT URL + pending Redis key (1 h) |
+| Relay — `POST /api/admin/media/confirm` | ✅ Done | GETDEL pending key → insert DB row; client-reported size/duration |
+| Relay — `GET /api/admin/media` | ✅ Done | Lists rows with per-item presigned GET URLs |
+| Relay — `DELETE /api/admin/media/:id` | ✅ Done | S3 delete then DB delete; fails closed |
+| Relay — `StorageClient` (rusty-s3) | ✅ Done | `presign_put`, `presign_get`, `delete_object`; optional (503 when unset) |
+| Portal — `/media` page | ✅ Done | Drag-drop upload + progress + file list with delete; client component |
+| Relay — `GET /media/:id` | ✅ Done | Public permalink; 302 → fresh presigned GET URL; no auth (presigned URL is the auth) |
+| Portal — Media Library "Copy region URL" | ✅ Done | One-click copy of `BACKEND_URL/media/:id`; how-to callout guides WG flag setup |
+| `docs/events.md` — media permalink docs | ✅ Done | Documents relay permalink vs raw presigned URL; external URL fallback note |
 
 ---
 
@@ -198,6 +210,7 @@ Long-term; implement as isolated `AudioModule` registrations.
 
 | Issue | Severity | Workaround / Fix |
 |-------|----------|-----------------|
+| S3_ENDPOINT must be browser-reachable | Medium | Presigned PUT/GET URLs are given directly to the browser. Use the public MinIO address, not an internal Docker hostname. Bucket also needs CORS allowing `PUT` from the portal origin. |
 | WorldGuard `FAILED` in Gradle dep tree | Low | Stale Gradle module cache from an earlier failed resolution attempt. Run `./gradlew :paper:compileJava --refresh-dependencies` on first build or clean the `~/.gradle/caches/modules-*/com.sk89q.worldguard/` entry. The `transitive = false` flag means only the WG JAR is needed; the transitive tree error doesn't block compilation. |
 | `jwt::verify` exists but is unwired for player WS | Resolved | Wired as `AdminClaims` extractor for all admin REST routes. Player JWT is issued on OTT validation. |
 | Portal admin auth is a placeholder | Medium | `ADMIN_SECRET` env-var check in `app/actions/auth.ts`. Fine for internal/local use; replace before any public deployment. |
@@ -210,7 +223,7 @@ Long-term; implement as isolated `AudioModule` registrations.
 
 ```bash
 # Rust relay
-cd backend && cp .env.example .env   # fill JWT_SECRET, REDIS_URL
+cd backend && cp .env.example .env   # fill JWT_SECRET, REDIS_URL, and optionally S3_* vars
 cargo run
 
 # Java plugin (Paper)
@@ -244,3 +257,6 @@ npm run build && npm start
 | Typed API stubs (portal) | `portal/lib/api.ts` |
 | TypeScript WS message types | `portal/lib/ws-types.ts` |
 | Admin auth placeholder | `portal/lib/auth.ts` + `portal/app/actions/auth.ts` |
+| S3/MinIO client (presign + delete) | `backend/src/storage/mod.rs` |
+| Media API handlers | `backend/src/api/media.rs` |
+| Media library portal page | `portal/app/(admin)/media/page.tsx` |

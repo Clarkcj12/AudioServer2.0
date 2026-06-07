@@ -38,6 +38,23 @@ export interface SettingsUpdate {
   audio_enabled?: boolean;
 }
 
+/** An audio file stored in S3/MinIO, indexed in the audio_media table. */
+export interface AudioMediaItem {
+  id: string;
+  object_key: string;
+  filename: string;
+  content_type: string;
+  /** Bytes — client-reported on upload, nullable. */
+  size_bytes: number | null;
+  /** Seconds — client-reported on upload, nullable. */
+  duration_seconds: number | null;
+  /** Admin UUID who uploaded the file. */
+  uploaded_by: string;
+  created_at: string;
+  /** Presigned GET URL (1-hour TTL). Generated at query time. */
+  url: string;
+}
+
 /** Summary counts returned by GET /api/stats. */
 export interface DashboardStats {
   active_sessions: number;
@@ -98,5 +115,52 @@ export const api = {
     });
     if (!res.ok) throw new Error(`settings PUT: ${res.status}`);
     return res.json() as Promise<UserSettings>;
+  },
+
+  // ── Media library ─────────────────────────────────────────────────────────
+
+  /** GET /api/admin/media — list all uploaded audio files. */
+  async listMedia(): Promise<AudioMediaItem[]> {
+    const res = await fetch('/api/relay/admin/media', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`media list: ${res.status}`);
+    return res.json() as Promise<AudioMediaItem[]>;
+  },
+
+  /**
+   * POST /api/admin/media/upload-url — request a presigned PUT URL.
+   * Returns the URL to PUT the file bytes to (direct to S3, not proxied)
+   * and the object_key to pass to confirmUpload.
+   */
+  async requestUploadUrl(filename: string, contentType: string): Promise<{ upload_url: string; object_key: string }> {
+    const res = await fetch('/api/relay/admin/media/upload-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename, content_type: contentType }),
+    });
+    if (!res.ok) throw new Error(`upload-url: ${res.status}`);
+    return res.json() as Promise<{ upload_url: string; object_key: string }>;
+  },
+
+  /** POST /api/admin/media/confirm — record a completed upload in the DB. */
+  async confirmUpload(
+    objectKey: string,
+    sizeBytes: number | null,
+    durationSeconds: number | null,
+  ): Promise<AudioMediaItem> {
+    const res = await fetch('/api/relay/admin/media/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ object_key: objectKey, size_bytes: sizeBytes, duration_seconds: durationSeconds }),
+    });
+    if (!res.ok) throw new Error(`confirm: ${res.status}`);
+    return res.json() as Promise<AudioMediaItem>;
+  },
+
+  /** DELETE /api/admin/media/:id — remove from DB and S3. */
+  async deleteMedia(id: string): Promise<void> {
+    const res = await fetch(`/api/relay/admin/media/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error(`media delete: ${res.status}`);
   },
 };

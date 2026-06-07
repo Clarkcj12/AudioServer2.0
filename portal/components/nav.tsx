@@ -8,6 +8,7 @@ const LINKS: { href: string; label: string; phase?: 3 }[] = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/sessions',  label: 'Sessions' },
   { href: '/regions',   label: 'Audio Regions' },
+  { href: '/media',     label: 'Media Library' },
   { href: '/settings',  label: 'Player Settings' },
   { href: '/events',    label: 'Activity' },
   { href: '/hardware',  label: 'Hardware',  phase: 3 },
